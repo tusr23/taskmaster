@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskMaster — Minimal Todo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app-card">
+    <header class="app-header">
+      <div>
+        <h1>TaskMaster</h1>
+        <div class="header-sub">
+          <span id="stats-text">0 of 0 completed</span>
+          <span class="dot">•</span>
+          <span id="live-clock" class="live-clock"></span>
+        </div>
+      </div>
+      <button id="theme-toggle" aria-label="Toggle theme">🌙</button>
+    </header>
+
+    <form id="todo-form">
+      <div class="form-main">
+        <input type="text" id="todo-input" placeholder="Add a new task..." required autocomplete="off">
+        <button type="submit">Add</button>
+      </div>
+      <div class="form-meta-row">
+        <select id="todo-priority" aria-label="Priority">
+          <option value="low">🟢 Low</option>
+          <option value="medium" selected>🟡 Med</option>
+          <option value="high">🔴 High</option>
+        </select>
+        <input type="datetime-local" id="todo-datetime" aria-label="Due date and time">
+      </div>
+    </form>
+
+    <div class="search-wrap">
+      <input type="text" id="search-input" placeholder="Search tasks..." autocomplete="off">
+    </div>
+
+    <div class="filters">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="active">Active</button>
+      <button class="filter-btn" data-filter="completed">Done</button>
+      <button id="clear-btn" class="clear-btn">Clear Done</button>
+    </div>
+
+    <ul id="todo-list"></ul>
+    <p id="empty-msg" class="empty-msg">No tasks to show. Add one above!</p>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
