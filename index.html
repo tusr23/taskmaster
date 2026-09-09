@@ -3,55 +3,158 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TaskMaster — Minimal Todo</title>
+  <title>TaskMaster — Smart Task Manager</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <canvas id="confetti-canvas"></canvas>
+
   <main class="app-card">
+    <!-- Header -->
     <header class="app-header">
-      <div>
-        <h1>TaskMaster</h1>
-        <div class="header-sub">
-          <span id="stats-text">0 of 0 completed</span>
-          <span class="dot">•</span>
-          <span id="live-clock" class="live-clock"></span>
+      <div class="brand">
+        <div class="logo">⚡</div>
+        <div>
+          <h1>TaskMaster</h1>
+          <div class="subtitle">
+            <span id="stats-text">0 of 0 completed</span> • <span id="live-clock"></span>
+          </div>
         </div>
       </div>
-      <button id="theme-toggle" aria-label="Toggle theme">🌙</button>
+      <div class="header-actions">
+        <button id="sound-toggle" class="icon-btn" title="Toggle sound">🔊</button>
+        <button id="backup-btn" class="icon-btn" title="Backup & Export">💾</button>
+        <button id="theme-toggle" class="icon-btn" title="Toggle theme">🌙</button>
+      </div>
     </header>
 
-    <form id="todo-form">
-      <div class="form-main">
-        <input type="text" id="todo-input" placeholder="Add a new task..." required autocomplete="off">
-        <button type="submit">Add</button>
+    <!-- Progress Dashboard -->
+    <section class="dashboard">
+      <div class="dashboard-header">
+        <span class="label">Overall Progress</span>
+        <span id="progress-percent" class="percent">0%</span>
       </div>
-      <div class="form-meta-row">
-        <select id="todo-priority" aria-label="Priority">
-          <option value="low">🟢 Low</option>
-          <option value="medium" selected>🟡 Med</option>
-          <option value="high">🔴 High</option>
+      <div class="progress-track">
+        <div id="progress-bar-fill" class="progress-fill" style="width: 0%;"></div>
+      </div>
+      <div class="metrics">
+        <span class="pill" id="metric-total">Total: <strong>0</strong></span>
+        <span class="pill" id="metric-active">Active: <strong>0</strong></span>
+        <span class="pill done" id="metric-done">Done: <strong>0</strong></span>
+        <span class="pill overdue" id="metric-overdue" style="display: none;">Overdue: <strong>0</strong></span>
+      </div>
+    </section>
+
+    <!-- Task Creation Form -->
+    <form id="todo-form">
+      <div class="form-row main-row">
+        <input type="text" id="todo-input" placeholder="What needs to be done? (Press 'N')" required autocomplete="off">
+        <button type="submit" id="add-btn">+ Add Task</button>
+      </div>
+      <div class="form-row meta-row">
+        <select id="todo-category">
+          <option value="general" selected>📌 General</option>
+          <option value="work">💼 Work</option>
+          <option value="personal">👤 Personal</option>
+          <option value="study">📚 Study</option>
+          <option value="health">🏃 Health</option>
+          <option value="finance">💰 Finance</option>
         </select>
-        <input type="datetime-local" id="todo-datetime" aria-label="Due date and time">
+        <select id="todo-priority">
+          <option value="low">🟢 Low Priority</option>
+          <option value="medium" selected>🟡 Medium Priority</option>
+          <option value="high">🔴 High Priority</option>
+        </select>
+        <input type="datetime-local" id="todo-datetime" title="Due date and time">
       </div>
     </form>
 
-    <div class="search-wrap">
-      <input type="text" id="search-input" placeholder="Search tasks..." autocomplete="off">
-    </div>
+    <!-- Controls: Search, Filters & Sorting -->
+    <section class="controls">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="Search tasks... (Press '/')">
+        <button type="button" id="search-clear-btn" style="display: none;">&times;</button>
+      </div>
 
-    <div class="filters">
-      <button class="filter-btn active" data-filter="all">All</button>
-      <button class="filter-btn" data-filter="active">Active</button>
-      <button class="filter-btn" data-filter="completed">Done</button>
-      <button id="clear-btn" class="clear-btn">Clear Done</button>
-    </div>
+      <div class="filter-row">
+        <div class="filter-tabs">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="active">Active</button>
+          <button class="filter-btn" data-filter="completed">Done</button>
+        </div>
 
-    <ul id="todo-list"></ul>
-    <p id="empty-msg" class="empty-msg">No tasks to show. Add one above!</p>
+        <div class="sort-box">
+          <label for="sort-select">Sort:</label>
+          <select id="sort-select">
+            <option value="manual">🖐️ Drag & Drop</option>
+            <option value="due-asc">📅 Due Date</option>
+            <option value="priority-desc">⚡ Priority</option>
+            <option value="created-desc">🕒 Newest</option>
+            <option value="alpha-asc">🔤 Name (A-Z)</option>
+          </select>
+        </div>
+
+        <button id="clear-btn" class="clear-btn">Clear Done</button>
+      </div>
+
+      <div class="tags-row" id="category-chips">
+        <span class="tags-label">Tags:</span>
+        <button class="chip-btn active" data-category="all">All</button>
+        <button class="chip-btn" data-category="general">📌 General</button>
+        <button class="chip-btn" data-category="work">💼 Work</button>
+        <button class="chip-btn" data-category="personal">👤 Personal</button>
+        <button class="chip-btn" data-category="study">📚 Study</button>
+        <button class="chip-btn" data-category="health">🏃 Health</button>
+        <button class="chip-btn" data-category="finance">💰 Finance</button>
+      </div>
+    </section>
+
+    <!-- Task List -->
+    <ul id="todo-list" class="task-list"></ul>
+    
+    <!-- Empty Message -->
+    <div id="empty-msg" class="empty-state">
+      <div class="empty-icon">📝</div>
+      <p class="empty-title">No tasks found</p>
+      <p class="empty-subtitle">Add a new task above or adjust your search filters.</p>
+    </div>
   </main>
+
+  <!-- Modal: Backup, Export & Shortcuts -->
+  <div id="settings-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>⚙️ Backup & Tools</h2>
+        <button id="modal-close-btn" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-content">
+        <h3>💾 Backup & Export</h3>
+        <p class="modal-desc">Save your tasks as a PDF report, JSON backup file, or Markdown checklist.</p>
+        <div class="modal-btn-grid">
+          <button id="export-pdf-btn" class="btn secondary">📄 Export to PDF</button>
+          <button id="export-json-btn" class="btn secondary">📥 Export JSON</button>
+          <label class="btn secondary file-btn">
+            📤 Import JSON
+            <input type="file" id="import-json-file" accept=".json" style="display: none;">
+          </label>
+          <button id="copy-markdown-btn" class="btn secondary">📋 Copy Markdown</button>
+        </div>
+        <p id="backup-status-msg" class="status-message"></p>
+
+        <h3 class="mt">⌨️ Keyboard Shortcuts</h3>
+        <ul class="shortcuts">
+          <li><span>Focus search bar</span> <kbd>/</kbd></li>
+          <li><span>Add new task</span> <kbd>N</kbd></li>
+          <li><span>Close modal / clear search</span> <kbd>Esc</kbd></li>
+          <li><span>Save task or subtask</span> <kbd>Enter</kbd></li>
+        </ul>
+      </div>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>
