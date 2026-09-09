@@ -1,4 +1,3 @@
-/* 1. Theme Variables & Base Styles */
 :root {
   --bg: #0b0f19;
   --bg-gradient: radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.15), transparent 40%), #0b0f19;
@@ -20,10 +19,10 @@
 [data-theme="light"] {
   --bg: #f8fafc;
   --bg-gradient: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.1), transparent 35%), #f1f5f9;
-  --card-bg: rgba(255, 255, 255, 0.95);
+  --card-bg: #ffffff;
   --card-border: rgba(0, 0, 0, 0.08);
-  --item-bg: #ffffff;
-  --item-hover: #f8fafc;
+  --item-bg: #f8fafc;
+  --item-hover: #f1f5f9;
   --text: #0f172a;
   --text-muted: #64748b;
 }
@@ -40,14 +39,6 @@ body {
   padding: 2rem 1rem;
 }
 
-#confetti-canvas {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 99999;
-}
-
-/* 2. Main Container & Header */
 .app-card {
   width: 100%;
   max-width: 780px;
@@ -66,25 +57,20 @@ body {
   margin-bottom: 1.5rem;
 }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
+.brand { display: flex; align-items: center; gap: 0.75rem; }
 .logo {
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   background: linear-gradient(135deg, var(--primary), var(--accent));
   color: #fff;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
+  font-size: 1.2rem;
 }
 
-.brand h1 { font-size: 1.5rem; font-weight: 700; }
+.brand h1 { font-size: 1.45rem; font-weight: 700; }
 .subtitle { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
 
 .header-actions { display: flex; gap: 0.4rem; }
@@ -104,7 +90,7 @@ body {
 }
 .icon-btn:hover { background: var(--item-hover); transform: translateY(-1px); }
 
-/* 3. Progress Dashboard */
+/* Dashboard */
 .dashboard {
   background: var(--item-bg);
   border: 1px solid var(--card-border);
@@ -149,7 +135,7 @@ body {
 .pill.done { color: var(--success); border-color: rgba(16, 185, 129, 0.3); }
 .pill.overdue { color: var(--danger); background: rgba(244, 63, 94, 0.15); border-color: rgba(244, 63, 94, 0.3); font-weight: 700; }
 
-/* 4. Task Creation Form */
+/* Form */
 #todo-form { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem; }
 .form-row { display: flex; gap: 0.5rem; }
 .main-row input {
@@ -172,7 +158,6 @@ body {
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
   white-space: nowrap;
 }
 #add-btn:hover { background: var(--primary-hover); }
@@ -189,14 +174,10 @@ body {
 }
 [data-theme="dark"] .meta-row input::-webkit-calendar-picker-indicator { filter: invert(0.8); }
 
-/* 5. Controls: Search, Filters, Tags */
+/* Controls */
 .controls { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.25rem; }
 
-.search-box {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
+.search-box { position: relative; display: flex; align-items: center; }
 .search-icon { position: absolute; left: 0.8rem; font-size: 0.9rem; opacity: 0.6; }
 .search-box input {
   width: 100%;
@@ -264,7 +245,7 @@ body {
   font-size: 0.76rem;
   cursor: pointer;
 }
-.clear-btn:hover { color: var(--danger); border-color: rgba(244, 63, 94, 0.4); }
+.clear-btn:hover { color: var(--danger); }
 
 .tags-row { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
 .tags-label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
@@ -276,11 +257,10 @@ body {
   padding: 0.2rem 0.65rem;
   border-radius: 99px;
   cursor: pointer;
-  transition: all 0.2s;
 }
 .chip-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
-/* 6. Task List & Items */
+/* Task List */
 .task-list { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
 
 .todo-item {
@@ -288,15 +268,11 @@ body {
   border: 1px solid var(--card-border);
   border-radius: 10px;
   padding: 0.75rem 1rem;
-  transition: all 0.2s;
+  transition: background 0.2s;
 }
-.todo-item:hover { background: var(--item-hover); transform: translateY(-1px); }
-.todo-item.dragging { opacity: 0.35; border-style: dashed; }
-.todo-item.drag-top { border-top: 2px solid var(--primary); }
-.todo-item.drag-bottom { border-bottom: 2px solid var(--primary); }
+.todo-item:hover { background: var(--item-hover); }
 
 .todo-row { display: flex; align-items: flex-start; gap: 0.75rem; }
-.drag-handle { color: var(--text-muted); cursor: grab; font-size: 1rem; user-select: none; }
 
 .task-checkbox {
   width: 18px;
@@ -307,7 +283,7 @@ body {
 }
 
 .todo-content { flex: 1; min-width: 0; }
-.todo-title { font-size: 0.95rem; word-break: break-word; line-height: 1.4; }
+.todo-title { font-size: 0.95rem; word-break: break-word; }
 .todo-item.completed .todo-title { text-decoration: line-through; color: var(--text-muted); }
 
 .todo-meta { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.3rem; }
@@ -323,13 +299,52 @@ body {
 .badge.prio-low { color: var(--success); background: rgba(16, 185, 129, 0.12); }
 .badge.overdue { color: var(--danger); font-weight: 700; background: rgba(244, 63, 94, 0.15); }
 
-.subtasks-toggle-btn {
-  background: rgba(99, 102, 241, 0.12);
-  border: 1px solid rgba(99, 102, 241, 0.25);
+/* Native HTML5 <details> & <summary> for Subtasks */
+.subtasks-box {
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+}
+
+.subtasks-summary {
+  cursor: pointer;
   color: var(--primary);
-  font-size: 0.7rem;
-  padding: 0.15rem 0.5rem;
-  border-radius: 99px;
+  font-weight: 600;
+  padding: 0.1rem 0;
+  outline: none;
+  user-select: none;
+}
+
+.subtasks-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 0.4rem;
+  padding-left: 1.2rem;
+}
+
+.subtask-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; }
+.subtask-item.completed span { text-decoration: line-through; color: var(--text-muted); }
+.subtask-delete { background: none; border: none; color: var(--text-muted); cursor: pointer; }
+.subtask-delete:hover { color: var(--danger); }
+
+.subtask-form { display: flex; gap: 0.35rem; margin-top: 0.4rem; padding-left: 1.2rem; }
+.subtask-form input {
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+  color: var(--text);
+  font-size: 0.8rem;
+  outline: none;
+}
+.subtask-form button {
+  background: var(--item-bg);
+  border: 1px solid var(--card-border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
   cursor: pointer;
 }
 
@@ -345,66 +360,30 @@ body {
 .btn-action:hover { color: var(--text); }
 .btn-action.delete:hover { color: var(--danger); }
 
-/* Subtasks Drawer */
-.subtasks-box {
-  margin-top: 0.65rem;
-  padding-top: 0.65rem;
-  border-top: 1px solid var(--card-border);
-  padding-left: 1.8rem;
-}
-.subtasks-list { list-style: none; display: flex; flex-direction: column; gap: 0.35rem; }
-.subtask-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; }
-.subtask-item.completed span { text-decoration: line-through; color: var(--text-muted); }
-.subtask-item button { background: none; border: none; color: var(--text-muted); cursor: pointer; }
-.subtask-item button:hover { color: var(--danger); }
-
-.subtask-form { display: flex; gap: 0.35rem; margin-top: 0.5rem; }
-.subtask-form input {
-  flex: 1;
-  background: rgba(0, 0, 0, 0.15);
-  border: 1px solid var(--card-border);
-  border-radius: 6px;
-  padding: 0.3rem 0.5rem;
-  color: var(--text);
-  font-size: 0.8rem;
-  outline: none;
-}
-.subtask-form button {
-  background: var(--item-bg);
-  border: 1px solid var(--card-border);
-  color: var(--text);
-  border-radius: 6px;
-  padding: 0.25rem 0.6rem;
-  font-size: 0.78rem;
-  cursor: pointer;
-}
-
 /* Empty State */
 .empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--text-muted); }
 .empty-icon { font-size: 2.5rem; margin-bottom: 0.3rem; }
 .empty-title { font-weight: 600; color: var(--text); margin-bottom: 0.2rem; }
 .empty-subtitle { font-size: 0.85rem; }
 
-/* 7. Modal & Print */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  z-index: 1000;
-}
-.modal-card {
-  width: 100%;
-  max-width: 480px;
-  background: var(--card-bg);
+/* Native HTML5 <dialog> */
+.modal-dialog {
   border: 1px solid var(--card-border);
   border-radius: var(--radius);
+  background: var(--card-bg);
+  color: var(--text);
   padding: 1.5rem;
+  max-width: 480px;
+  width: 90%;
+  margin: auto;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
 }
+
+.modal-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+}
+
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
 .modal-header h2 { font-size: 1.15rem; }
 .close-btn { background: none; border: none; font-size: 1.4rem; color: var(--text-muted); cursor: pointer; }
@@ -439,9 +418,13 @@ body {
   .modal-btn-grid { grid-template-columns: 1fr; }
 }
 
+/* Print Styles for PDF Export */
 @media print {
   body { background: #fff !important; color: #000 !important; padding: 0 !important; }
   .app-card { box-shadow: none !important; border: none !important; max-width: 100% !important; padding: 0 !important; }
-  #confetti-canvas, .header-actions, #todo-form, .controls, .modal-overlay, .actions, .drag-handle { display: none !important; }
+  .header-actions, #todo-form, .controls, .modal-dialog, .actions { display: none !important; }
   .todo-item { border: 1px solid #ddd !important; background: #fff !important; color: #000 !important; break-inside: avoid; }
+  details { display: block !important; }
+  details[open] summary, details summary { display: none !important; }
+  .subtask-form { display: none !important; }
 }

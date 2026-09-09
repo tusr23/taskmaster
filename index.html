@@ -10,22 +10,17 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <canvas id="confetti-canvas"></canvas>
-
   <main class="app-card">
     <!-- Header -->
     <header class="app-header">
       <div class="brand">
-        <div class="logo">⚡</div>
+        <span class="logo">⚡</span>
         <div>
           <h1>TaskMaster</h1>
-          <div class="subtitle">
-            <span id="stats-text">0 of 0 completed</span> • <span id="live-clock"></span>
-          </div>
+          <p class="subtitle"><span id="stats-text">0 of 0 completed</span> • <span id="live-clock"></span></p>
         </div>
       </div>
       <div class="header-actions">
-        <button id="sound-toggle" class="icon-btn" title="Toggle sound">🔊</button>
         <button id="backup-btn" class="icon-btn" title="Backup & Export">💾</button>
         <button id="theme-toggle" class="icon-btn" title="Toggle theme">🌙</button>
       </div>
@@ -34,7 +29,7 @@
     <!-- Progress Dashboard -->
     <section class="dashboard">
       <div class="dashboard-header">
-        <span class="label">Overall Progress</span>
+        <span>Overall Progress</span>
         <span id="progress-percent" class="percent">0%</span>
       </div>
       <div class="progress-track">
@@ -52,7 +47,7 @@
     <form id="todo-form">
       <div class="form-row main-row">
         <input type="text" id="todo-input" placeholder="What needs to be done? (Press 'N')" required autocomplete="off">
-        <button type="submit" id="add-btn">+ Add Task</button>
+        <button type="submit" id="add-btn">+ Add</button>
       </div>
       <div class="form-row meta-row">
         <select id="todo-category">
@@ -64,9 +59,9 @@
           <option value="finance">💰 Finance</option>
         </select>
         <select id="todo-priority">
-          <option value="low">🟢 Low Priority</option>
-          <option value="medium" selected>🟡 Medium Priority</option>
-          <option value="high">🔴 High Priority</option>
+          <option value="low">🟢 Low</option>
+          <option value="medium" selected>🟡 Medium</option>
+          <option value="high">🔴 High</option>
         </select>
         <input type="datetime-local" id="todo-datetime" title="Due date and time">
       </div>
@@ -90,11 +85,11 @@
         <div class="sort-box">
           <label for="sort-select">Sort:</label>
           <select id="sort-select">
-            <option value="manual">🖐️ Drag & Drop</option>
-            <option value="due-asc">📅 Due Date</option>
-            <option value="priority-desc">⚡ Priority</option>
-            <option value="created-desc">🕒 Newest</option>
-            <option value="alpha-asc">🔤 Name (A-Z)</option>
+            <option value="manual">Manual</option>
+            <option value="due-asc">Due Date</option>
+            <option value="priority-desc">Priority</option>
+            <option value="created-desc">Newest</option>
+            <option value="alpha-asc">Name (A-Z)</option>
           </select>
         </div>
 
@@ -120,41 +115,39 @@
     <div id="empty-msg" class="empty-state">
       <div class="empty-icon">📝</div>
       <p class="empty-title">No tasks found</p>
-      <p class="empty-subtitle">Add a new task above or adjust your search filters.</p>
+      <p class="empty-subtitle">Add a task above or adjust your search.</p>
     </div>
   </main>
 
-  <!-- Modal: Backup, Export & Shortcuts -->
-  <div id="settings-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h2>⚙️ Backup & Tools</h2>
-        <button id="modal-close-btn" class="close-btn">&times;</button>
-      </div>
-      <div class="modal-content">
-        <h3>💾 Backup & Export</h3>
-        <p class="modal-desc">Save your tasks as a PDF report, JSON backup file, or Markdown checklist.</p>
-        <div class="modal-btn-grid">
-          <button id="export-pdf-btn" class="btn secondary">📄 Export to PDF</button>
-          <button id="export-json-btn" class="btn secondary">📥 Export JSON</button>
-          <label class="btn secondary file-btn">
-            📤 Import JSON
-            <input type="file" id="import-json-file" accept=".json" style="display: none;">
-          </label>
-          <button id="copy-markdown-btn" class="btn secondary">📋 Copy Markdown</button>
-        </div>
-        <p id="backup-status-msg" class="status-message"></p>
-
-        <h3 class="mt">⌨️ Keyboard Shortcuts</h3>
-        <ul class="shortcuts">
-          <li><span>Focus search bar</span> <kbd>/</kbd></li>
-          <li><span>Add new task</span> <kbd>N</kbd></li>
-          <li><span>Close modal / clear search</span> <kbd>Esc</kbd></li>
-          <li><span>Save task or subtask</span> <kbd>Enter</kbd></li>
-        </ul>
-      </div>
+  <!-- Native HTML5 Dialog Modal: Backup, Export & Shortcuts -->
+  <dialog id="settings-modal" class="modal-dialog">
+    <div class="modal-header">
+      <h2>⚙️ Backup & Tools</h2>
+      <button id="modal-close-btn" class="close-btn">&times;</button>
     </div>
-  </div>
+    <div class="modal-body">
+      <h3>💾 Backup & Export</h3>
+      <p class="modal-desc">Export tasks as a PDF report, JSON backup, or Markdown checklist.</p>
+      <div class="modal-btn-grid">
+        <button id="export-pdf-btn" class="btn secondary">📄 Export / Save PDF</button>
+        <button id="export-json-btn" class="btn secondary">📥 Export JSON</button>
+        <label class="btn secondary file-btn">
+          📤 Import JSON
+          <input type="file" id="import-json-file" accept=".json" style="display: none;">
+        </label>
+        <button id="copy-markdown-btn" class="btn secondary">📋 Copy Markdown</button>
+      </div>
+      <p id="backup-status-msg" class="status-message"></p>
+
+      <h3 class="mt">⌨️ Keyboard Shortcuts</h3>
+      <ul class="shortcuts">
+        <li><span>Focus search bar</span> <kbd>/</kbd></li>
+        <li><span>Add new task</span> <kbd>N</kbd></li>
+        <li><span>Close modal / clear search</span> <kbd>Esc</kbd></li>
+        <li><span>Submit task or subtask</span> <kbd>Enter</kbd></li>
+      </ul>
+    </div>
+  </dialog>
 
   <script src="app.js"></script>
 </body>
