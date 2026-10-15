@@ -21,10 +21,55 @@
         </div>
       </div>
       <div class="header-actions">
+        <button id="pomo-toggle-btn" class="icon-btn" title="Pomodoro Focus Timer">🍅</button>
         <button id="backup-btn" class="icon-btn" title="Backup & Export">💾</button>
         <button id="theme-toggle" class="icon-btn" title="Toggle theme">🌙</button>
       </div>
     </header>
+
+    <!-- Pomodoro Focus Timer Section -->
+    <section id="pomodoro-section" class="pomodoro-card">
+      <div class="pomodoro-header">
+        <div class="pomodoro-title-group">
+          <span class="pomo-icon">🍅</span>
+          <div>
+            <span class="pomo-heading">Pomodoro Focus</span>
+            <span id="pomo-session-pill" class="pill pomo-pill">0 sessions completed</span>
+          </div>
+        </div>
+        <div class="pomodoro-header-actions">
+          <button id="pomo-sound-btn" class="icon-btn pomo-mini-btn" title="Toggle audio chime">🔔</button>
+          <button id="pomo-close-btn" class="icon-btn pomo-mini-btn" title="Close Pomodoro">&times;</button>
+        </div>
+      </div>
+
+      <div class="pomodoro-modes">
+        <button class="pomo-mode-btn active" data-mode="focus">Focus (25m)</button>
+        <button class="pomo-mode-btn" data-mode="short">Short Break (5m)</button>
+        <button class="pomo-mode-btn" data-mode="long">Long Break (15m)</button>
+      </div>
+
+      <div class="pomodoro-body">
+        <div class="pomo-display-container">
+          <div class="pomo-time" id="pomo-time-display">25:00</div>
+          <div class="pomo-progress-track">
+            <div id="pomo-progress-fill" class="pomo-progress-fill" style="width: 100%;"></div>
+          </div>
+        </div>
+
+        <div class="pomo-task-info">
+          <span class="pomo-task-label">Target:</span>
+          <span id="pomo-current-task-name" class="pomo-task-name">No task selected (Click ⏱️ on any task below)</span>
+          <button id="pomo-clear-task-btn" class="pomo-clear-task" title="Unlink task" style="display: none;">&times;</button>
+        </div>
+
+        <div class="pomodoro-controls">
+          <button id="pomo-start-btn" class="btn pomo-primary-btn">▶ Start Focus</button>
+          <button id="pomo-reset-btn" class="btn pomo-secondary-btn" title="Reset timer">↺ Reset</button>
+          <button id="pomo-skip-btn" class="btn pomo-secondary-btn" title="Skip to next session">⏭ Skip</button>
+        </div>
+      </div>
+    </section>
 
     <!-- Progress Dashboard -->
     <section class="dashboard">
@@ -72,7 +117,7 @@
       <div class="search-box">
         <span class="search-icon">🔍</span>
         <input type="text" id="search-input" placeholder="Search tasks... (Press '/')">
-        <button type="button" id="search-clear-btn" style="display: none;">&times;</button>
+        <button type="button" id="search-clear-btn">&times;</button>
       </div>
 
       <div class="filter-row">
@@ -143,6 +188,8 @@
       <ul class="shortcuts">
         <li><span>Focus search bar</span> <kbd>/</kbd></li>
         <li><span>Add new task</span> <kbd>N</kbd></li>
+        <li><span>Toggle Pomodoro timer</span> <kbd>P</kbd></li>
+        <li><span>Start / pause timer</span> <kbd>Space</kbd></li>
         <li><span>Close modal / clear search</span> <kbd>Esc</kbd></li>
         <li><span>Submit task or subtask</span> <kbd>Enter</kbd></li>
       </ul>

@@ -1,61 +1,79 @@
-// TaskMaster — Minimal & Beginner-Friendly JavaScript
-// Features: LocalStorage, Progress Bar, Subtasks, Search, Filters, Themes, and PDF Print
-
-// 1. STATE & DATA
+// TaskMaster — High-Performance, Minimal-Footprint Task & Focus Suite
+const $ = id => document.getElementById(id);
 const defaultTasks = [
   { id: 1, text: "Welcome to TaskMaster! 🚀", completed: false, priority: "high", category: "general", datetime: "", subtasks: ["Explore subtasks and tags"] },
   { id: 2, text: "Click Export to PDF to print or save", completed: false, priority: "medium", category: "work", datetime: "", subtasks: [] }
 ];
 
+// 1. STATE & STORAGE
 let tasks = JSON.parse(localStorage.getItem("tm_tasks")) || defaultTasks;
-let currentFilter = "all";
-let currentCategory = "all";
-let searchQuery = "";
-let currentSort = "manual";
+let currentFilter = "all", currentCategory = "all", currentSort = "manual", searchQuery = "";
 
-// Category display labels
 const categories = { general: "📌 General", work: "💼 Work", personal: "👤 Personal", study: "📚 Study", health: "🏃 Health", finance: "💰 Finance" };
+const prioWeight = { high: 3, medium: 2, low: 1 };
 
-// Save tasks to LocalStorage and update the screen
-function saveAndRender() {
-  localStorage.setItem("tm_tasks", JSON.stringify(tasks));
-  renderTasks();
+// Pomodoro State
+const POMO_SECS = { focus: 1500, short: 300, long: 900 };
+let pomoMode = "focus", pomoLeft = 1500, pomoTimer = null, pomoTask = null;
+let pomoSessions = +localStorage.getItem("tm_pomo_sessions") || 0;
+let pomoSound = localStorage.getItem("tm_pomo_sound") !== "false";
+let pomoOpen = localStorage.getItem("tm_pomo_visible") !== "false";
+
+const save = () => { localStorage.setItem("tm_tasks", JSON.stringify(tasks)); render(); };
+
+// Web Audio API Chime (Zero network requests / external files)
+function playTone(success) {
+  if (!pomoSound) return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.connect(g); g.connect(ctx.destination);
+    const t = ctx.currentTime;
+    if (success) {
+      [523.25, 659.25, 783.99].forEach((f, i) => osc.frequency.setValueAtTime(f, t + i * 0.15));
+      g.gain.setValueAtTime(0.25, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.85);
+      osc.start(t); osc.stop(t + 0.85);
+    } else {
+      osc.type = "triangle"; osc.frequency.setValueAtTime(440, t);
+      g.gain.setValueAtTime(0.1, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+      osc.start(t); osc.stop(t + 0.15);
+    }
+  } catch (_) {}
 }
 
-// 2. RENDER TASKS & DASHBOARD
-function renderTasks() {
+const escapeHTML = str => {
+  const p = document.createElement("p");
+  p.textContent = str || "";
+  return p.innerHTML;
+};
+
+// 2. RENDER ENGINE
+function render() {
   const q = searchQuery.toLowerCase().trim();
-  const searchClearBtn = document.getElementById("search-clear-btn");
-  if (searchClearBtn) searchClearBtn.style.display = q ? "block" : "none";
+  const now = new Date();
 
   // Filter tasks
-  const filtered = tasks.filter(t => {
-    if (currentFilter === "active" && t.completed) return false;
-    if (currentFilter === "completed" && !t.completed) return false;
-    if (currentCategory !== "all" && t.category !== currentCategory) return false;
-    if (q && !t.text.toLowerCase().includes(q) && !(t.subtasks && t.subtasks.some(s => s.toLowerCase().includes(q)))) return false;
-    return true;
-  });
+  const filtered = tasks.filter(t => 
+    (currentFilter === "all" || (currentFilter === "active" ? !t.completed : t.completed)) &&
+    (currentCategory === "all" || t.category === currentCategory) &&
+    (!q || t.text.toLowerCase().includes(q) || t.subtasks?.some(s => s.toLowerCase().includes(q)))
+  );
 
   // Sort tasks
-  const sorted = [...filtered].sort((a, b) => {
-    if (currentSort === "due-asc") return (a.datetime || "z").localeCompare(b.datetime || "z");
-    if (currentSort === "priority-desc") {
-      const p = { high: 3, medium: 2, low: 1 };
-      return (p[b.priority] || 2) - (p[a.priority] || 2);
-    }
-    if (currentSort === "created-desc") return b.id - a.id;
-    if (currentSort === "alpha-asc") return a.text.localeCompare(b.text);
-    return 0;
-  });
+  filtered.sort((a, b) => 
+    currentSort === "due-asc" ? (a.datetime || "z").localeCompare(b.datetime || "z") :
+    currentSort === "priority-desc" ? (prioWeight[b.priority] || 2) - (prioWeight[a.priority] || 2) :
+    currentSort === "created-desc" ? b.id - a.id :
+    currentSort === "alpha-asc" ? a.text.localeCompare(b.text) : 0
+  );
 
-  // Build task list HTML
-  const listEl = document.getElementById("todo-list");
-  listEl.innerHTML = sorted.map(t => {
-    const isOverdue = t.datetime && !t.completed && new Date(t.datetime) < new Date();
-    const subtasks = t.subtasks || [];
+  // Render Task Cards
+  $("todo-list").innerHTML = filtered.map(t => {
+    const isOverdue = t.datetime && !t.completed && new Date(t.datetime) < now;
+    const isFocused = t.id === pomoTask;
+    const subs = t.subtasks || [];
     return `
-      <li class="todo-item ${t.completed ? 'completed' : ''}" data-id="${t.id}">
+      <li class="todo-item ${t.completed ? 'completed' : ''} ${isFocused ? 'is-focused-task' : ''}" data-id="${t.id}">
         <div class="todo-row">
           <input type="checkbox" class="task-checkbox" data-id="${t.id}" ${t.completed ? 'checked' : ''}>
           <div class="todo-content">
@@ -64,18 +82,16 @@ function renderTasks() {
               <span class="badge">${categories[t.category] || "General"}</span>
               <span class="badge prio-${t.priority}">${(t.priority || 'medium').toUpperCase()}</span>
               ${t.datetime ? `<span class="badge ${isOverdue ? 'overdue' : ''}">📅 ${t.datetime.replace('T', ' ')}</span>` : ''}
+              ${isFocused ? `<span class="badge prio-high">⚡ Focusing</span>` : ''}
             </div>
-
-            <!-- Native HTML5 <details> for collapsible subtasks -->
-            <details class="subtasks-box" ${subtasks.length ? 'open' : ''}>
-              <summary class="subtasks-summary">${subtasks.length ? `Subtasks (${subtasks.length})` : '+ Add subtask'}</summary>
+            <details class="subtasks-box" ${subs.length ? 'open' : ''}>
+              <summary class="subtasks-summary">${subs.length ? `Subtasks (${subs.length})` : '+ Add subtask'}</summary>
               <ul class="subtasks-list">
-                ${subtasks.map((s, idx) => `
+                ${subs.map((s, idx) => `
                   <li class="subtask-item">
                     <span>• ${escapeHTML(s)}</span>
                     <button class="subtask-delete" data-task-id="${t.id}" data-idx="${idx}">&times;</button>
-                  </li>
-                `).join('')}
+                  </li>`).join('')}
               </ul>
               <form class="subtask-form" data-task-id="${t.id}">
                 <input type="text" placeholder="New subtask..." required autocomplete="off">
@@ -83,195 +99,227 @@ function renderTasks() {
               </form>
             </details>
           </div>
-
           <div class="actions">
+            <button class="btn-action focus-task" data-id="${t.id}" title="${isFocused ? 'Unlink Focus' : 'Focus with Pomodoro'}">${isFocused ? '🍅' : '⏱️'}</button>
             <button class="btn-action edit" data-id="${t.id}" title="Edit">✏️</button>
             <button class="btn-action delete" data-id="${t.id}" title="Delete">&times;</button>
           </div>
         </div>
-      </li>
-    `;
+      </li>`;
   }).join('');
 
-  // Update progress bar and counts
-  const total = tasks.length;
-  const done = tasks.filter(t => t.completed).length;
-  const overdue = tasks.filter(t => t.datetime && !t.completed && new Date(t.datetime) < new Date()).length;
-  const percent = total ? Math.round((done / total) * 100) : 0;
+  // Dashboard Metrics
+  const total = tasks.length, done = tasks.filter(t => t.completed).length;
+  const overdue = tasks.filter(t => t.datetime && !t.completed && new Date(t.datetime) < now).length;
+  const pct = total ? Math.round((done / total) * 100) : 0;
 
-  document.getElementById("empty-msg").style.display = sorted.length ? "none" : "block";
-  document.getElementById("stats-text").textContent = `${done} of ${total} completed`;
-  document.getElementById("progress-percent").textContent = `${percent}%`;
-  document.getElementById("progress-bar-fill").style.width = `${percent}%`;
-  document.getElementById("metric-total").innerHTML = `Total: <strong>${total}</strong>`;
-  document.getElementById("metric-active").innerHTML = `Active: <strong>${total - done}</strong>`;
-  document.getElementById("metric-done").innerHTML = `Done: <strong>${done}</strong>`;
-  
-  const overdueEl = document.getElementById("metric-overdue");
-  overdueEl.style.display = overdue ? "inline-block" : "none";
-  if (overdue) overdueEl.innerHTML = `⚠️ Overdue: <strong>${overdue}</strong>`;
+  $("empty-msg").style.display = filtered.length ? "none" : "block";
+  $("stats-text").textContent = `${done} of ${total} completed`;
+  $("progress-percent").textContent = `${pct}%`;
+  $("progress-bar-fill").style.width = `${pct}%`;
+  $("metric-total").innerHTML = `Total: <strong>${total}</strong>`;
+  $("metric-active").innerHTML = `Active: <strong>${total - done}</strong>`;
+  $("metric-done").innerHTML = `Done: <strong>${done}</strong>`;
+  $("metric-overdue").style.display = overdue ? "inline-block" : "none";
+  if (overdue) $("metric-overdue").innerHTML = `⚠️ Overdue: <strong>${overdue}</strong>`;
+
+  renderPomo();
 }
 
-function escapeHTML(str) {
-  const p = document.createElement("p");
-  p.textContent = str || "";
-  return p.innerHTML;
+// 3. POMODORO ENGINE
+function renderPomo() {
+  const card = $("pomodoro-section");
+  if (!card) return;
+  card.classList.toggle("hidden", !pomoOpen);
+  $("pomo-toggle-btn")?.classList.toggle("active", pomoOpen);
+
+  const m = String(Math.floor(pomoLeft / 60)).padStart(2, "0");
+  const s = String(pomoLeft % 60).padStart(2, "0");
+  const formatted = `${m}:${s}`;
+  $("pomo-time-display").textContent = formatted;
+  $("pomo-progress-fill").style.width = `${(pomoLeft / POMO_SECS[pomoMode]) * 100}%`;
+
+  const startBtn = $("pomo-start-btn");
+  if (pomoTimer) {
+    startBtn.textContent = `⏸ Pause ${pomoMode === 'focus' ? 'Focus' : 'Break'}`;
+    card.classList.add("running");
+    document.title = `(${formatted}) 🍅 TaskMaster`;
+  } else {
+    startBtn.textContent = pomoLeft < POMO_SECS[pomoMode] ? "▶ Resume" : "▶ Start Focus";
+    card.classList.remove("running");
+    document.title = "TaskMaster — Smart Task Manager";
+  }
+
+  $("pomo-session-pill").textContent = `${pomoSessions} session${pomoSessions === 1 ? '' : 's'}`;
+  $("pomo-sound-btn").textContent = pomoSound ? "🔔" : "🔕";
+
+  const t = tasks.find(x => x.id === pomoTask);
+  $("pomo-current-task-name").textContent = t ? t.text : "No task selected (Click ⏱️ on any task below)";
+  $("pomo-clear-task-btn").style.display = t ? "inline-block" : "none";
 }
 
-// 3. TASK ACTIONS (Add, Toggle, Delete, Edit, Subtasks)
-document.getElementById("todo-form").addEventListener("submit", e => {
+function togglePomo() {
+  if (pomoTimer) {
+    clearInterval(pomoTimer); pomoTimer = null;
+  } else {
+    if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
+    playTone(false);
+    pomoTimer = setInterval(() => {
+      if (pomoLeft > 0) {
+        pomoLeft--; renderPomo();
+      } else {
+        clearInterval(pomoTimer); pomoTimer = null;
+        playTone(true);
+        if (pomoMode === "focus") {
+          pomoSessions++;
+          localStorage.setItem("tm_pomo_sessions", pomoSessions);
+          const t = tasks.find(x => x.id === pomoTask);
+          if (t && !t.completed && confirm(`🎉 25m Focus done! Mark "${t.text}" as completed?`)) {
+            t.completed = true; pomoTask = null; save();
+          }
+          setPomoMode(pomoSessions % 4 === 0 ? "long" : "short");
+        } else {
+          setPomoMode("focus");
+        }
+      }
+    }, 1000);
+  }
+  renderPomo();
+}
+
+function setPomoMode(mode) {
+  if (pomoTimer) { clearInterval(pomoTimer); pomoTimer = null; }
+  pomoMode = mode; pomoLeft = POMO_SECS[mode];
+  document.querySelectorAll(".pomo-mode-btn").forEach(b => b.classList.toggle("active", b.dataset.mode === mode));
+  renderPomo();
+}
+
+function togglePomoCard(open = !pomoOpen) {
+  pomoOpen = open;
+  localStorage.setItem("tm_pomo_visible", pomoOpen);
+  renderPomo();
+}
+
+// 4. TASK ACTIONS & EVENT DELEGATION
+$("todo-form").addEventListener("submit", e => {
   e.preventDefault();
-  const input = document.getElementById("todo-input");
+  const input = $("todo-input");
   if (!input.value.trim()) return;
-
   tasks.unshift({
     id: Date.now(),
     text: input.value.trim(),
     completed: false,
-    category: document.getElementById("todo-category").value,
-    priority: document.getElementById("todo-priority").value,
-    datetime: document.getElementById("todo-datetime").value,
+    category: $("todo-category").value,
+    priority: $("todo-priority").value,
+    datetime: $("todo-datetime").value,
     subtasks: []
   });
-
-  input.value = "";
-  document.getElementById("todo-datetime").value = "";
-  saveAndRender();
+  input.value = ""; $("todo-datetime").value = "";
+  save();
 });
 
-// Click delegation on task list
-document.getElementById("todo-list").addEventListener("click", e => {
-  const target = e.target;
-  const id = Number(target.dataset.id || target.closest("li")?.dataset.id);
-  const task = tasks.find(t => t.id === id);
+$("todo-list").addEventListener("click", e => {
+  const t = e.target;
+  const id = Number(t.dataset.id || t.closest("li")?.dataset.id);
+  const task = tasks.find(x => x.id === id);
 
-  // Checkbox toggle
-  if (target.classList.contains("task-checkbox") && task) {
-    task.completed = target.checked;
-    saveAndRender();
-  }
-
-  // Delete task
-  if (target.classList.contains("delete")) {
-    tasks = tasks.filter(t => t.id !== id);
-    saveAndRender();
-  }
-
-  // Edit task title
-  if (target.classList.contains("edit") && task) {
-    const updated = prompt("Edit task title:", task.text);
-    if (updated && updated.trim()) {
-      task.text = updated.trim();
-      saveAndRender();
+  if (t.classList.contains("task-checkbox") && task) {
+    task.completed = t.checked; save();
+  } else if (t.classList.contains("focus-task") && task) {
+    pomoTask = pomoTask === id ? null : id;
+    if (pomoTask) {
+      togglePomoCard(true);
+      $("pomodoro-section")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
-  }
-
-  // Delete subtask
-  if (target.classList.contains("subtask-delete")) {
-    const taskId = Number(target.dataset.taskId);
-    const subIdx = Number(target.dataset.idx);
-    const parentTask = tasks.find(t => t.id === taskId);
-    if (parentTask) {
-      parentTask.subtasks.splice(subIdx, 1);
-      saveAndRender();
-    }
+    render();
+  } else if (t.classList.contains("delete")) {
+    if (pomoTask === id) pomoTask = null;
+    tasks = tasks.filter(x => x.id !== id); save();
+  } else if (t.classList.contains("edit") && task) {
+    const text = prompt("Edit task:", task.text);
+    if (text?.trim()) { task.text = text.trim(); save(); }
+  } else if (t.classList.contains("subtask-delete")) {
+    const parent = tasks.find(x => x.id === +t.dataset.taskId);
+    parent?.subtasks.splice(+t.dataset.idx, 1); save();
   }
 });
 
-// Add subtask form submission
-document.getElementById("todo-list").addEventListener("submit", e => {
+$("todo-list").addEventListener("submit", e => {
   if (e.target.classList.contains("subtask-form")) {
     e.preventDefault();
-    const taskId = Number(e.target.dataset.taskId);
+    const parent = tasks.find(x => x.id === +e.target.dataset.taskId);
     const input = e.target.querySelector("input");
-    const parentTask = tasks.find(t => t.id === taskId);
-    if (parentTask && input.value.trim()) {
-      if (!parentTask.subtasks) parentTask.subtasks = [];
-      parentTask.subtasks.push(input.value.trim());
-      saveAndRender();
+    if (parent && input.value.trim()) {
+      (parent.subtasks = parent.subtasks || []).push(input.value.trim());
+      save();
     }
   }
 });
 
-// 4. CONTROLS: Search, Filters, Sort, Theme, & Clock
-document.getElementById("search-input").addEventListener("input", e => {
-  searchQuery = e.target.value;
-  renderTasks();
-});
+// 5. SEARCH, FILTERS, CONTROLS
+$("search-input").addEventListener("input", e => { searchQuery = e.target.value; render(); });
+$("search-clear-btn").addEventListener("click", () => { searchQuery = $("search-input").value = ""; render(); });
+$("sort-select").addEventListener("change", e => { currentSort = e.target.value; render(); });
+$("clear-btn").addEventListener("click", () => { tasks = tasks.filter(t => !t.completed); save(); });
 
-document.getElementById("search-clear-btn").addEventListener("click", () => {
-  searchQuery = "";
-  document.getElementById("search-input").value = "";
-  renderTasks();
-});
-
-document.getElementById("sort-select").addEventListener("change", e => {
-  currentSort = e.target.value;
-  renderTasks();
-});
-
-document.querySelectorAll(".filter-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
+document.querySelector(".filter-tabs").addEventListener("click", e => {
+  if (e.target.dataset.filter) {
     document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    currentFilter = btn.dataset.filter;
-    renderTasks();
+    e.target.classList.add("active");
+    currentFilter = e.target.dataset.filter;
+    render();
+  }
+});
+
+$("category-chips").addEventListener("click", e => {
+  if (e.target.dataset.category) {
+    document.querySelectorAll(".chip-btn").forEach(b => b.classList.remove("active"));
+    e.target.classList.add("active");
+    currentCategory = e.target.dataset.category;
+    render();
+  }
+});
+
+// Theme & Clock
+const applyTheme = theme => {
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem("tm_theme", theme);
+  $("theme-toggle").textContent = theme === "light" ? "☀️" : "🌙";
+};
+$("theme-toggle").addEventListener("click", () => applyTheme(document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light"));
+applyTheme(localStorage.getItem("tm_theme") || "dark");
+
+setInterval(() => {
+  $("live-clock").textContent = new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+}, 1000);
+
+// Pomodoro Controls
+$("pomo-start-btn")?.addEventListener("click", togglePomo);
+$("pomo-reset-btn")?.addEventListener("click", () => { pomoLeft = POMO_SECS[pomoMode]; if (pomoTimer) togglePomo(); renderPomo(); });
+$("pomo-skip-btn")?.addEventListener("click", () => setPomoMode(pomoMode === "focus" ? "short" : "focus"));
+$("pomo-toggle-btn")?.addEventListener("click", () => togglePomoCard());
+$("pomo-close-btn")?.addEventListener("click", () => togglePomoCard(false));
+$("pomo-clear-task-btn")?.addEventListener("click", () => { pomoTask = null; render(); });
+$("pomo-sound-btn")?.addEventListener("click", () => {
+  pomoSound = !pomoSound; localStorage.setItem("tm_pomo_sound", pomoSound); renderPomo();
+});
+document.querySelectorAll(".pomo-mode-btn").forEach(b => b.addEventListener("click", () => setPomoMode(b.dataset.mode)));
+
+// 6. BACKUP MODAL & EXPORT (PDF, JSON, Markdown)
+const modal = $("settings-modal");
+$("backup-btn").addEventListener("click", () => modal.showModal());
+$("modal-close-btn").addEventListener("click", () => modal.close());
+$("export-pdf-btn").addEventListener("click", () => { modal.close(); window.print(); });
+
+$("export-json-btn").addEventListener("click", () => {
+  const a = Object.assign(document.createElement("a"), {
+    href: URL.createObjectURL(new Blob([JSON.stringify(tasks, null, 2)], { type: "application/json" })),
+    download: `TaskMaster_${new Date().toISOString().slice(0, 10)}.json`
   });
-});
-
-document.querySelectorAll(".chip-btn").forEach(chip => {
-  chip.addEventListener("click", () => {
-    document.querySelectorAll(".chip-btn").forEach(c => c.classList.remove("active"));
-    chip.classList.add("active");
-    currentCategory = chip.dataset.category;
-    renderTasks();
-  });
-});
-
-document.getElementById("clear-btn").addEventListener("click", () => {
-  tasks = tasks.filter(t => !t.completed);
-  saveAndRender();
-});
-
-// Theme toggle
-document.getElementById("theme-toggle").addEventListener("click", () => {
-  const isDark = document.documentElement.getAttribute("data-theme") !== "light";
-  document.documentElement.setAttribute("data-theme", isDark ? "light" : "dark");
-  localStorage.setItem("tm_theme", isDark ? "light" : "dark");
-  document.getElementById("theme-toggle").textContent = isDark ? "☀️" : "🌙";
-});
-const savedTheme = localStorage.getItem("tm_theme") || "dark";
-document.documentElement.setAttribute("data-theme", savedTheme);
-document.getElementById("theme-toggle").textContent = savedTheme === "light" ? "☀️" : "🌙";
-
-// Live Clock
-function updateClock() {
-  document.getElementById("live-clock").textContent = new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-}
-setInterval(updateClock, 1000);
-updateClock();
-
-// 5. NATIVE DIALOG MODAL & EXPORT (PDF, JSON, Markdown)
-const modal = document.getElementById("settings-modal");
-document.getElementById("backup-btn").addEventListener("click", () => modal.showModal());
-document.getElementById("modal-close-btn").addEventListener("click", () => modal.close());
-
-// PDF Export (Uses browser native print / Save as PDF)
-document.getElementById("export-pdf-btn").addEventListener("click", () => {
-  modal.close();
-  window.print();
-});
-
-// JSON Export & Import
-document.getElementById("export-json-btn").addEventListener("click", () => {
-  const blob = new Blob([JSON.stringify(tasks, null, 2)], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `TaskMaster_${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
 });
 
-document.getElementById("import-json-file").addEventListener("change", e => {
+$("import-json-file").addEventListener("change", e => {
   const file = e.target.files?.[0];
   if (!file) return;
   const reader = new FileReader();
@@ -279,39 +327,31 @@ document.getElementById("import-json-file").addEventListener("change", e => {
     try {
       const data = JSON.parse(ev.target.result);
       if (Array.isArray(data)) {
-        tasks = data;
-        saveAndRender();
-        document.getElementById("backup-status-msg").textContent = `✅ Imported ${tasks.length} tasks!`;
+        tasks = data; save();
+        $("backup-status-msg").textContent = `✅ Imported ${tasks.length} tasks!`;
       }
-    } catch (_) {
-      document.getElementById("backup-status-msg").textContent = "❌ Invalid file.";
-    }
+    } catch { $("backup-status-msg").textContent = "❌ Invalid JSON."; }
   };
   reader.readAsText(file);
 });
 
-// Copy Markdown
-document.getElementById("copy-markdown-btn").addEventListener("click", async () => {
-  let md = `# TaskMaster Export\n\n`;
-  tasks.forEach(t => {
-    md += `- [${t.completed ? 'x' : ' '}] ${t.text} [${t.priority.toUpperCase()}]\n`;
-    t.subtasks?.forEach(s => md += `  - [ ] ${s}\n`);
-  });
+$("copy-markdown-btn").addEventListener("click", async () => {
+  const md = "# TaskMaster Export\n\n" + tasks.map(t => 
+    `- [${t.completed ? 'x' : ' '}] ${t.text} [${t.priority.toUpperCase()}]\n` +
+    (t.subtasks?.map(s => `  - [ ] ${s}\n`).join('') || '')
+  ).join('');
   await navigator.clipboard.writeText(md);
-  document.getElementById("backup-status-msg").textContent = "✅ Copied Markdown checklist!";
+  $("backup-status-msg").textContent = "✅ Copied Markdown checklist!";
 });
 
-// Keyboard Shortcuts
+// 7. KEYBOARD SHORTCUTS
 document.addEventListener("keydown", e => {
   if (["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement.tagName)) return;
-  if (e.key === "/") {
-    e.preventDefault();
-    document.getElementById("search-input").focus();
-  } else if (e.key === "n" || e.key === "N") {
-    e.preventDefault();
-    document.getElementById("todo-input").focus();
-  }
+  if (e.key === "/") { e.preventDefault(); $("search-input").focus(); }
+  else if (e.key === "n" || e.key === "N") { e.preventDefault(); $("todo-input").focus(); }
+  else if (e.key === "p" || e.key === "P") { e.preventDefault(); togglePomoCard(); }
+  else if (e.code === "Space" && pomoOpen) { e.preventDefault(); togglePomo(); }
 });
 
 // Initial Render
-renderTasks();
+render();

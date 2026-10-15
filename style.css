@@ -89,6 +89,236 @@ body {
   transition: all 0.2s;
 }
 .icon-btn:hover { background: var(--item-hover); transform: translateY(-1px); }
+.icon-btn.active { background: #f43f5e; color: #fff; border-color: #f43f5e; }
+
+/* Pomodoro Focus Timer Section */
+.pomodoro-card {
+  background: var(--item-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 1.2rem 1.35rem;
+  margin-bottom: 1.25rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.pomodoro-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #f43f5e, #fb7185, #f59e0b);
+  opacity: 0.8;
+}
+
+.pomodoro-card.running {
+  border-color: rgba(244, 63, 94, 0.45);
+  box-shadow: 0 0 20px rgba(244, 63, 94, 0.15);
+}
+
+.pomodoro-card.hidden {
+  display: none;
+}
+
+.pomodoro-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.85rem;
+}
+
+.pomodoro-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.pomo-icon {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.pomo-heading {
+  font-size: 0.95rem;
+  font-weight: 700;
+  display: block;
+}
+
+.pomo-pill {
+  font-size: 0.7rem;
+  display: inline-block;
+  margin-top: 2px;
+}
+
+.pomodoro-header-actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.icon-btn.pomo-mini-btn {
+  width: 28px;
+  height: 28px;
+  font-size: 0.85rem;
+}
+
+.pomodoro-modes {
+  display: flex;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.25rem;
+  border-radius: 99px;
+  border: 1px solid var(--card-border);
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.pomo-mode-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  padding: 0.35rem 0.5rem;
+  border-radius: 99px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.pomo-mode-btn.active {
+  background: linear-gradient(135deg, #f43f5e, #e11d48);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(244, 63, 94, 0.35);
+}
+
+.pomodoro-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.pomo-display-container {
+  width: 100%;
+  margin-bottom: 0.85rem;
+}
+
+.pomo-time {
+  font-size: 3.25rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  margin-bottom: 0.75rem;
+  background: linear-gradient(180deg, var(--text) 0%, var(--text-muted) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.pomodoro-card.running .pomo-time {
+  background: linear-gradient(180deg, #ffffff 0%, #fecdd3 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.pomo-progress-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.pomo-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f43f5e, #fb7185, #f59e0b);
+  border-radius: 99px;
+  transition: width 0.5s ease;
+}
+
+.pomo-task-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  max-width: 95%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed var(--card-border);
+  border-radius: 8px;
+  padding: 0.35rem 0.75rem;
+  margin-bottom: 1rem;
+  font-size: 0.8rem;
+}
+
+.pomo-task-label {
+  color: var(--text-muted);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.pomo-task-name {
+  color: var(--text);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 280px;
+}
+
+.pomo-clear-task {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.2rem;
+}
+.pomo-clear-task:hover {
+  color: var(--danger);
+}
+
+.pomodoro-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.pomo-primary-btn {
+  background: linear-gradient(135deg, #f43f5e, #e11d48);
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.5rem;
+  border-radius: 99px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(244, 63, 94, 0.35);
+}
+.pomo-primary-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(244, 63, 94, 0.45);
+}
+
+.pomo-secondary-btn {
+  background: var(--item-bg);
+  border: 1px solid var(--card-border);
+  color: var(--text-muted);
+  padding: 0.5rem 0.95rem;
+  border-radius: 99px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.pomo-secondary-btn:hover {
+  color: var(--text);
+  background: var(--item-hover);
+}
 
 /* Dashboard */
 .dashboard {
@@ -197,6 +427,9 @@ body {
   color: var(--text-muted);
   font-size: 1.1rem;
   cursor: pointer;
+}
+#search-input:placeholder-shown ~ #search-clear-btn {
+  display: none;
 }
 
 .filter-row {
@@ -356,9 +589,18 @@ body {
   cursor: pointer;
   padding: 0.2rem;
   border-radius: 4px;
+  font-size: 0.9rem;
 }
 .btn-action:hover { color: var(--text); }
+.btn-action.focus-task:hover { color: #f43f5e; transform: scale(1.15); }
 .btn-action.delete:hover { color: var(--danger); }
+
+/* Focused Task highlight in list */
+.todo-item.is-focused-task {
+  border-color: rgba(244, 63, 94, 0.45);
+  background: rgba(244, 63, 94, 0.06);
+  box-shadow: 0 0 14px rgba(244, 63, 94, 0.12);
+}
 
 /* Empty State */
 .empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--text-muted); }
@@ -422,7 +664,7 @@ body {
 @media print {
   body { background: #fff !important; color: #000 !important; padding: 0 !important; }
   .app-card { box-shadow: none !important; border: none !important; max-width: 100% !important; padding: 0 !important; }
-  .header-actions, #todo-form, .controls, .modal-dialog, .actions { display: none !important; }
+  .header-actions, #pomodoro-section, #todo-form, .controls, .modal-dialog, .actions { display: none !important; }
   .todo-item { border: 1px solid #ddd !important; background: #fff !important; color: #000 !important; break-inside: avoid; }
   details { display: block !important; }
   details[open] summary, details summary { display: none !important; }
